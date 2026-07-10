@@ -1,0 +1,16 @@
+[package]
+name = "finvader"
+version = "0.1.0"
+edition = "2024"
+description = "Finance-aware sentiment analysis for Rust — VADER extended with a financial lexicon, phrase rules, and catalyst detection for news headlines and market text"
+license = "MIT"
+repository = "https://github.com/albyte-ai/finvader"
+keywords = ["sentiment", "finance", "nlp", "vader", "trading"]
+categories = ["text-processing"]
+readme = "README.md"
+
+[dependencies]
+vader-sentimental = "0.1"
+
+[profile.release]
+lto = true

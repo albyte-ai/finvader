@@ -1,0 +1,12 @@
+flowchart LR
+    subgraph SRC["News sources"]
+        S1["Benzinga"]
+        S2["TipRanks"]
+        S3["Nasdaq"]
+        S4["Motley Fool"]
+    end
+    SRC --> SCRAPE["Scraper<br/>(parallel fetch)"]
+    SCRAPE --> FV["finvader<br/>sentiment + catalyst"]
+    FV --> SIG{"StronglyBullish<br/>+ catalyst?"}
+    SIG -- "yes" --> ALERT["Push notification<br/>(buy signal)"]
+    SIG -- "no" --> LOG["Store / weekly scan"]

@@ -1,0 +1,16 @@
+flowchart TD
+    T["Input text<br/>(headline / sentence)"] --> N["normalize<br/>lowercase, strip punct,<br/>keep hyphen amp percent dollar apostrophe"]
+    T --> M["mask_for_base<br/>neutral-override finance words<br/>(gross, cancer, debt...)"]
+    M --> BV["base VADER<br/>polarity_scores"]
+    N --> PP["phrase_pass<br/>multi-word phrases<br/>(beats expectations)"]
+    PP --> GP["gap_pass<br/>verb...object pairs<br/>(beats ... expectations)"]
+    GP --> WP["word_pass<br/>single words +<br/>up 45% / down 30%"]
+    WP --> FS["fin_sum"]
+    FS --> FC["fin_compound<br/>x / sqrt(x^2 + 15)"]
+    BV --> BL{"triggers<br/>found?"}
+    FC --> BL
+    BL -- "no" --> CB
+    BL -- "yes" --> BLEND["blend<br/>0.35 * base + 0.65 * fin"]
+    BLEND --> CB["+ catalyst bonus<br/>(+/- 0.25)"]
+    CB --> CL["clamp [-1, 1]"]
+    CL --> OUT["compound + signal<br/>StronglyBullish ... StronglyBearish"]
