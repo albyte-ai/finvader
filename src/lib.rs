@@ -138,7 +138,11 @@ impl FinVader {
             (1.0 - FIN_WEIGHT) * base.compound + FIN_WEIGHT * fin_compound
         };
         if let Some(c) = &catalyst {
-            compound += if c.bullish { CATALYST_BONUS } else { -CATALYST_BONUS };
+            compound += if c.bullish {
+                CATALYST_BONUS
+            } else {
+                -CATALYST_BONUS
+            };
         }
         let compound = compound.clamp(-1.0, 1.0);
 
@@ -235,7 +239,7 @@ fn mask_for_base(text: &str) -> String {
             let clean: String = word
                 .chars()
                 .filter(|c| c.is_alphanumeric() || *c == '-')
-                .flat_map(|c| c.to_lowercase())
+                .flat_map(char::to_lowercase)
                 .collect();
             if lexicon::NEUTRAL_OVERRIDES.contains(&clean.as_str()) {
                 "item"

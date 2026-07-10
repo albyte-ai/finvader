@@ -58,12 +58,20 @@ fn beats_generic_vader_on_financial_headlines() {
         }
     }
 
-    let fv_acc = fv_correct as f64 / total as f64;
-    let base_acc = base_correct as f64 / total as f64;
+    #[allow(clippy::cast_precision_loss)]
+    let total_f = total as f64;
+    let fv_acc = f64::from(fv_correct) / total_f;
+    let base_acc = f64::from(base_correct) / total_f;
 
     println!("== labeled financial headlines ({total}) ==");
-    println!("finvader:      {fv_correct}/{total} = {:.1}%", fv_acc * 100.0);
-    println!("generic VADER: {base_correct}/{total} = {:.1}%", base_acc * 100.0);
+    println!(
+        "finvader:      {fv_correct}/{total} = {:.1}%",
+        fv_acc * 100.0
+    );
+    println!(
+        "generic VADER: {base_correct}/{total} = {:.1}%",
+        base_acc * 100.0
+    );
     for (text, compound, want) in &fv_misses {
         println!("finvader MISS (want {want:+}, got {compound:+.3}): {text}");
     }

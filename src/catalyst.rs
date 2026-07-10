@@ -48,7 +48,7 @@ const PATTERNS: &[(&str, bool)] = &[
     // blowout results
     ("record quarter", true),
     ("record revenue", true),
-    ("beat and raise", 	true),
+    ("beat and raise", true),
     // distress
     ("chapter 11", false),
     ("chapter 7", false),
@@ -74,10 +74,11 @@ pub(crate) fn detect(padded_norm: &str) -> Option<Catalyst> {
         }
     }
     for &(a, b, bullish) in CO_OCCURRENCE {
-        if padded_norm.contains(&format!(" {a} "))
-            && padded_norm.contains(&format!(" {b} "))
-        {
-            return Some(Catalyst { pattern: a, bullish });
+        if padded_norm.contains(&format!(" {a} ")) && padded_norm.contains(&format!(" {b} ")) {
+            return Some(Catalyst {
+                pattern: a,
+                bullish,
+            });
         }
     }
     None

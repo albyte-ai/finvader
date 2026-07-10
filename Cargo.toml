@@ -2,18 +2,36 @@
 name = "finvader"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
 description = "Finance-aware sentiment analysis for Rust — VADER extended with a financial lexicon, phrase rules, and catalyst detection for news headlines and market text"
 license = "MIT"
 repository = "https://github.com/albyte-ai/finvader"
+homepage = "https://github.com/albyte-ai/finvader"
+documentation = "https://docs.rs/finvader"
 keywords = ["sentiment", "finance", "nlp", "vader", "trading"]
-categories = ["text-processing"]
+categories = ["text-processing", "science"]
 readme = "README.md"
+exclude = ["docs/*.mmd", "data/"]
 
 [dependencies]
 vader-sentimental = "0.1"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Allow these pedantic lints that hurt readability in this crate
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [profile.release]
 lto = true

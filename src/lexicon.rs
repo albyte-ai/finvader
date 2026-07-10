@@ -226,19 +226,44 @@ pub const NEUTRAL_OVERRIDES: &[&str] = &[
 /// Negation words. When one appears within three tokens before a matched
 /// term, the term's valence is flipped and damped (VADER's negation rule).
 pub const NEGATIONS: &[&str] = &[
-    "not", "no", "never", "without", "failed", "fails", "fail", "unable",
-    "lacks", "denied", "denies", "cannot", "didn't", "doesn't", "isn't",
-    "wasn't", "won't", "don't", "couldn't", "can't", "aren't", "hasn't",
-    "haven't", "wouldn't", "shouldn't",
+    "not",
+    "no",
+    "never",
+    "without",
+    "failed",
+    "fails",
+    "fail",
+    "unable",
+    "lacks",
+    "denied",
+    "denies",
+    "cannot",
+    "didn't",
+    "doesn't",
+    "isn't",
+    "wasn't",
+    "won't",
+    "don't",
+    "couldn't",
+    "can't",
+    "aren't",
+    "hasn't",
+    "haven't",
+    "wouldn't",
+    "shouldn't",
 ];
 
 /// Intensity boosters that amplify the following term.
 pub const BOOSTERS_UP: &[&str] = &[
-    "significantly", "sharply", "substantially", "massively",
-    "dramatically", "strongly", "hugely", "materially",
+    "significantly",
+    "sharply",
+    "substantially",
+    "massively",
+    "dramatically",
+    "strongly",
+    "hugely",
+    "materially",
 ];
 
 /// Dampeners that soften the following term.
-pub const BOOSTERS_DOWN: &[&str] = &[
-    "slightly", "modestly", "marginally", "somewhat", "mildly",
-];
+pub const BOOSTERS_DOWN: &[&str] = &["slightly", "modestly", "marginally", "somewhat", "mildly"];

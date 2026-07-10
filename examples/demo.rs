@@ -21,7 +21,10 @@ fn main() {
         "Acme to report third quarter results on Thursday",
     ];
 
-    println!("{:>8}  {:>8}  {:<16}  headline", "vader", "finvader", "signal");
+    println!(
+        "{:>8}  {:>8}  {:<16}  headline",
+        "vader", "finvader", "signal"
+    );
     println!("{}", "-".repeat(100));
     for text in headlines {
         let b = base.polarity_scores(text);
@@ -29,7 +32,13 @@ fn main() {
         let catalyst = f
             .catalyst
             .as_ref()
-            .map(|c| format!("  [catalyst: {} {}]", c.pattern, if c.bullish { "↑" } else { "↓" }))
+            .map(|c| {
+                format!(
+                    "  [catalyst: {} {}]",
+                    c.pattern,
+                    if c.bullish { "↑" } else { "↓" }
+                )
+            })
             .unwrap_or_default();
         println!(
             "{:>+8.3}  {:>+8.3}  {:<16}  {}{}",
