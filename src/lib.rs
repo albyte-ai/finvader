@@ -26,6 +26,7 @@
 //! assert!(s.compound > 0.5);
 //! assert_eq!(s.signal, Signal::StronglyBullish);
 //! ```
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod catalyst;
 mod lexicon;
@@ -345,6 +346,7 @@ fn parse_pct(token: &str) -> Option<f64> {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::*;
 
@@ -436,6 +438,21 @@ mod tests {
         // U+2019 apostrophe must not split tokens or break matching.
         let s = fv.analyze("Acme\u{2019}s margin expansion continues");
         assert!(s.compound > 0.15, "compound was {}", s.compound);
+    }
+
+    #[test]
+    fn gap_phrase_by_without_pct_does_not_amplify() {
+        let fv = FinVader::new();
+        // "by" at end of text → tokens.get(j+2) is None → no amplification
+        let s = fv.analyze("Acme beats expectations by");
+        let plain = fv.analyze("Acme beats expectations");
+        // Without a parseable percentage, the magnitude amplifier should not fire.
+        assert!(
+            (s.compound - plain.compound).abs() < 0.05,
+            "gap 'by' without pct changed compound too much: {} vs {}",
+            s.compound,
+            plain.compound
+        );
     }
 
     #[test]
