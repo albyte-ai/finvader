@@ -1,35 +1,51 @@
-# finvader
+<div align="center">
 
-**Finance-aware sentiment analysis for Rust.** VADER, extended with a financial
-lexicon, phrase rules, and catalyst detection — tuned for news headlines and
-market text instead of tweets.
+# 📈 finvader
 
-[![crates.io](https://img.shields.io/crates/v/finvader.svg)](https://crates.io/crates/finvader)
-[![docs.rs](https://docs.rs/finvader/badge.svg)](https://docs.rs/finvader)
-[![license](https://img.shields.io/crates/l/finvader.svg)](./LICENSE)
+### Finance-aware sentiment analysis for Rust
+
+**VADER, re-tuned for the market** — financial lexicon, phrase rules, and
+catalyst detection for news headlines and market text instead of tweets.
+
+[![crates.io](https://img.shields.io/crates/v/finvader.svg?style=for-the-badge&color=fc8d62&logo=rust)](https://crates.io/crates/finvader)
+[![docs.rs](https://img.shields.io/docsrs/finvader?style=for-the-badge&color=66c2a5&logo=docsdotrs)](https://docs.rs/finvader)
+[![CI](https://img.shields.io/github/actions/workflow/status/albyte-ai/finvader/ci.yml?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/albyte-ai/finvader/actions)
+[![license](https://img.shields.io/crates/l/finvader.svg?style=for-the-badge&color=8da0cb)](https://github.com/albyte-ai/finvader/blob/main/LICENSE)
+
+[![accuracy](https://img.shields.io/badge/accuracy-100%25_(60%2F60)-brightgreen?style=flat-square)](#-accuracy)
+[![generic VADER](https://img.shields.io/badge/generic_VADER-51.7%25_(31%2F60)-red?style=flat-square)](#-accuracy)
+[![throughput](https://img.shields.io/badge/throughput-~45k_headlines%2Fsec-blue?style=flat-square)](#-performance)
+[![MSRV](https://img.shields.io/badge/MSRV-1.85-orange?style=flat-square)](https://github.com/albyte-ai/finvader/blob/main/Cargo.toml)
+[![deps](https://img.shields.io/badge/dependencies-1-blueviolet?style=flat-square)](https://github.com/albyte-ai/finvader/blob/main/Cargo.toml)
+
+</div>
+
+---
+
+## 🎯 Why finvader?
 
 Generic [VADER](https://github.com/cjhutto/vaderSentiment) was calibrated for
-social media. On financial text it misfires in two directions:
+social media. On financial text it misfires in **two directions**:
 
-- **Misses finance sentiment** — "beats expectations", "cuts guidance", "going
-  concern" all score near zero.
-- **Misfires on finance-neutral words** — "gross margin", "cancer drug", "debt
-  refinancing" score negative because of everyday-English valences.
+| ❌ Generic VADER problem | 💥 Example | finvader fix |
+| --- | --- | --- |
+| **Misses finance sentiment** | *"beats expectations"*, *"cuts guidance"*, *"going concern"* → score ≈ 0 | 📖 Financial lexicon + phrase rules |
+| **Misfires on neutral finance words** | *"**gross** margin"*, *"**cancer** drug"*, *"**debt** refinancing"* → scored negative | 🎭 Neutral-override masking |
 
-`finvader` fixes both, and adds detection for **catalysts** — single events
-(FDA approval, buyout offer, index inclusion, bankruptcy) that permanently
-re-rate a stock and deserve to be surfaced on their own.
+And it adds something VADER never had: **🚨 catalyst detection** — single
+events (FDA approval, buyout offer, index inclusion, bankruptcy) that
+permanently re-rate a stock and deserve to be surfaced on their own.
 
-## Accuracy
+## 🏆 Accuracy
 
-On a hand-labeled set of 60 financial headlines (`data/headlines.tsv`):
+On a hand-labeled set of 60 financial headlines:
 
-| Analyzer            | Correct signal | Accuracy  |
-| ------------------- | -------------- | --------- |
-| generic VADER       | 31 / 60        | 51.7%     |
-| **finvader**        | **60 / 60**    | **100%**  |
+| Analyzer | Correct signal | Accuracy | |
+| --- | --- | --- | --- |
+| generic VADER | 31 / 60 | 51.7% | 🟥🟥🟥🟥🟥⬜⬜⬜⬜⬜ |
+| **finvader** | **60 / 60** | **100%** | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 |
 
-## Quick start
+## 🚀 Quick start
 
 ```toml
 [dependencies]
@@ -51,94 +67,90 @@ for t in &s.triggers {
 }
 ```
 
-Construct one `FinVader` and reuse it across calls — it loads the lexicons once
-and is `Send + Sync`.
+> 💡 Construct one `FinVader` and reuse it across calls — it loads the
+> lexicons once and is `Send + Sync`.
 
-## How it works
+## ⚙️ How it works
 
-Each input runs two parallel passes — a masked base-VADER pass and a financial
-layer (phrases, gap-phrases, single words) — then the two are blended, nudged by
-any catalyst, and clamped:
-
-<p align="center">
-  <img src="docs/pipeline.svg" alt="finvader analysis pipeline" width="620">
-</p>
-
-- **normalize** — lowercase, strip punctuation, keep characters that matter in
-  market text (`-`, `%`, `$`, `'`).
-- **mask_for_base** — replace finance-neutral words (`gross`, `cancer`, `debt`,
-  `crude`, `vice`, `share`/`shares`, …) with a neutral placeholder *before* the
-  base VADER pass, so their everyday valences never pollute the score.
-- **phrase / gap / word passes** — match multi-word phrases (`beats
-  expectations`), gap-tolerant verb+object pairs (`beats … expectations`, up to
-  two tokens apart), and single words. Matches are consumed so nothing is
-  double-counted. `up 45%` / `down 30%` become magnitude-scaled directional
-  moves.
-- **negation & boosters** — `failed to beat expectations` flips; `sharply
-  missed` amplifies; `slightly missed` softens; `beat by 40%` amplifies on
-  magnitude.
-- **blend** — when financial terms are present the score is
-  `0.35 * base + 0.65 * financial`; otherwise the base VADER score passes
-  through untouched.
-- **catalyst bonus** — a detected event shifts the compound by ±0.25.
-
-### Signals
-
-`compound` is mapped to a discrete `Signal`:
-
-| compound            | Signal            |
-| ------------------- | ----------------- |
-| `>= 0.5`            | `StronglyBullish` |
-| `>= 0.15`           | `Bullish`         |
-| `-0.15 .. 0.15`     | `Neutral`         |
-| `<= -0.15`          | `Bearish`         |
-| `<= -0.5`           | `StronglyBearish` |
-
-### Catalyst detection
-
-Beyond the smooth sentiment score, `finvader` flags episodic-pivot events and
-returns them as an `Option<Catalyst>`:
-
-- **Bullish** — FDA approval / clearance, breakthrough therapy, met primary
-  endpoint, buyout / takeover / merger, S&P 500 inclusion, contract awards,
-  record quarter, beat-and-raise.
-- **Bearish** — FDA rejection, missed / failed endpoint, chapter 11 / 7, going
-  concern, SEC charges, accounting fraud, auditor resignation.
-
-## Where it fits
-
-`finvader` is the scoring core of a news-driven momentum alert pipeline:
+Each input runs two parallel passes — a masked base-VADER pass and a
+financial layer (phrases, gap-phrases, single words) — then the two are
+blended, nudged by any catalyst, and clamped:
 
 <p align="center">
-  <img src="docs/system.svg" alt="finvader in an alert pipeline" width="820">
+  <img src="https://raw.githubusercontent.com/albyte-ai/finvader/main/docs/pipeline.svg" alt="finvader analysis pipeline" width="620">
 </p>
 
-## Performance
+| Stage | What it does |
+| --- | --- |
+| 🔡 **normalize** | Lowercase, strip punctuation, keep market-text characters (`-`, `%`, `$`, `'`) |
+| 🎭 **mask_for_base** | Replace finance-neutral words (`gross`, `cancer`, `debt`, `crude`, `vice`, `share`…) with a placeholder *before* base VADER, so everyday valences never pollute the score |
+| 🧩 **phrase / gap / word passes** | Match multi-word phrases (`beats expectations`), gap-tolerant pairs (`beats … expectations`, up to 2 tokens apart), and single words — consumed so nothing double-counts. `up 45%` / `down 30%` become magnitude-scaled moves |
+| 🔁 **negation & boosters** | `failed to beat expectations` **flips** · `sharply missed` **amplifies** · `slightly missed` **softens** · `beat by 40%` **scales on magnitude** |
+| ⚖️ **blend** | With financial terms present: `0.35 × base + 0.65 × financial`; otherwise base VADER passes through untouched |
+| 🚨 **catalyst bonus** | A detected event shifts the compound by ±0.25 |
+
+### 📊 Signals
+
+`compound` maps to a discrete `Signal`:
+
+| compound | Signal | |
+| --- | --- | --- |
+| `>= 0.5` | `StronglyBullish` | 🟢🟢 |
+| `>= 0.15` | `Bullish` | 🟢 |
+| `-0.15 .. 0.15` | `Neutral` | ⚪ |
+| `<= -0.15` | `Bearish` | 🔴 |
+| `<= -0.5` | `StronglyBearish` | 🔴🔴 |
+
+### 🚨 Catalyst detection
+
+Beyond the smooth sentiment score, finvader flags **episodic-pivot events**
+and returns them as `Option<Catalyst>`:
+
+| 📈 Bullish catalysts | 📉 Bearish catalysts |
+| --- | --- |
+| FDA approval / clearance | FDA rejection |
+| Breakthrough therapy | Missed / failed endpoint |
+| Met primary endpoint | Chapter 11 / Chapter 7 |
+| Buyout / takeover / merger | Going concern |
+| S&P 500 inclusion | SEC charges |
+| Contract awards | Accounting fraud |
+| Record quarter, beat-and-raise | Auditor resignation |
+
+## 🔌 Where it fits
+
+finvader is the scoring core of a news-driven momentum alert pipeline:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/albyte-ai/finvader/main/docs/system.svg" alt="finvader in an alert pipeline" width="820">
+</p>
+
+## ⚡ Performance
 
 Single-threaded, release build, `cargo run --release --example bench`
 (Apple Silicon):
 
-| Analyzer          | per headline | throughput          |
-| ----------------- | ------------ | ------------------- |
-| generic VADER     | 1.8 µs       | ~570,000 / sec      |
-| **finvader**      | 22.3 µs      | ~45,000 / sec       |
+| Analyzer | Per headline | Throughput |
+| --- | --- | --- |
+| generic VADER | 1.8 µs | ~570,000 / sec |
+| **finvader** | 22.3 µs | **~45,000 / sec** |
 
 finvader does more work per call (masking + three match passes + catalyst
-detection), and still clears tens of thousands of headlines per second per core.
+detection) and still clears tens of thousands of headlines per second per
+core.
 
-## Lexicon
+## 📖 Lexicon
 
-Single-word and phrase valences are calibrated for market news, informed by the
-[Loughran-McDonald](https://sraf.nd.edu/loughranmcdonald-master-dictionary/)
+Single-word and phrase valences are calibrated for market news, informed by
+the [Loughran-McDonald](https://sraf.nd.edu/loughranmcdonald-master-dictionary/)
 financial sentiment research. Valences are on VADER's `-4.0 ..= 4.0` scale.
 
-## Examples
+## 🧪 Examples
 
 ```sh
-cargo run --example demo     # side-by-side finvader vs generic VADER
+cargo run --example demo              # side-by-side finvader vs generic VADER
 cargo run --release --example bench   # throughput benchmark
 ```
 
-## License
+## 📄 License
 
-MIT
+MIT © [albyte-ai](https://github.com/albyte-ai)
