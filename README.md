@@ -15,7 +15,7 @@ catalyst detection for news headlines and market text instead of tweets.
 [![accuracy](https://img.shields.io/badge/accuracy-100%25_(60%2F60)-brightgreen?style=flat-square)](#-accuracy)
 [![generic VADER](https://img.shields.io/badge/generic_VADER-51.7%25_(31%2F60)-red?style=flat-square)](#-accuracy)
 [![throughput](https://img.shields.io/badge/throughput-~45k_headlines%2Fsec-blue?style=flat-square)](#-performance)
-[![MSRV](https://img.shields.io/badge/MSRV-1.85-orange?style=flat-square)](https://github.com/albyte-ai/finvader/blob/main/Cargo.toml)
+[![MSRV](https://img.shields.io/badge/MSRV-1.88-orange?style=flat-square)](https://github.com/albyte-ai/finvader/blob/main/Cargo.toml)
 [![deps](https://img.shields.io/badge/dependencies-1-blueviolet?style=flat-square)](https://github.com/albyte-ai/finvader/blob/main/Cargo.toml)
 
 </div>
